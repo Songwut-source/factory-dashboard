@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Production Line - AS001</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .history-bar-container div {
+            transition: all 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="current-datetime" aria-live="polite"></div>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="logo-icon"></div>
+                <h2>Factory<span class="highlight">OS</span></h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" onclick="switchView('dashboard', this)">Dashboard</a>
+                <a href="#" class="nav-item" onclick="switchView('machines-overview', this)">All Machines</a>
+                <a href="#" class="nav-item" onclick="switchView('alarms', this)">Alarms</a>
+                <a href="#" class="nav-item" onclick="switchView('reports', this)">Reports</a>
+                <a href="#" class="nav-item" onclick="switchView('settings', this)">Settings</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div>
+                    <h1 class="page-title">AS001 Overview</h1>
+                    <p class="subtitle">Real-time Line Monitoring</p>
+                </div>
+                <div class="status-indicator">
+                    <span class="pulse-dot" id="machine-status-dot"></span>
+                    <span id="machine-status-text">Connecting...</span>
+                </div>
+            </header>
+
+            <div id="dashboard" class="view-section">
+                <div class="dashboard-grid">
+                    <!-- Bekido (Operation Rate) Widget -->
+                    <div class="card oee-card">
+                        <div class="card-header">
+                            <h3>Bekido </h3>
+                        </div>
+                        <div class="oee-display">
+                            <div class="oee-main-value">
+                                <span id="oee-value">0.00</span>%
+                            </div>
+                        </div>
+                        <div style="padding: 0.5rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                            <p>Availability / Operation Efficiency</p>
+                        </div>
+                        
+                        <!-- Manual Adjustments (Moved here) -->
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 8px;">
+                            <button class="btn btn-secondary" onclick="incrementActual()" style="background: rgba(16, 185, 129, 0.1); color: var(--success); border-color: rgba(16, 185, 129, 0.2); padding: 8px; font-size: 0.8rem;">
+                                +1 Actual
+                            </button>
+                            <div style="display: flex; gap: 5px;">
+                                <input type="number" id="manual-ok-input" placeholder="OK" style="width: 60px; background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); color: white; padding: 5px; border-radius: 4px; font-size: 0.8rem;">
+                                <input type="number" id="manual-ng-input" placeholder="NG" style="width: 60px; background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); color: white; padding: 5px; border-radius: 4px; font-size: 0.8rem;">
+                                <button class="btn btn-primary" onclick="setManualCounts()" style="flex: 1; padding: 5px; font-size: 0.8rem;">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Production Widget -->
+                    <div class="card production-card">
+                        <div class="card-header">
+                            <h3>Production Output</h3>
+                        </div>
+                        <div class="production-stats" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                            <div class="stat-box" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2);">
+                                <span class="label">Target</span>
+                                <span class="value" id="target-qty" style="color: var(--accent);">500</span>
+                            </div>
+                            <div class="stat-box good">
+                                <span class="label">Actual</span>
+                                <span class="value" id="actual-qty">0</span>
+                            </div>
+                            <div class="stat-box bad">
+                                <span class="label">NG</span>
+                                <span class="value" id="ng-qty">0</span>
+                            </div>
+                        </div>
+                        <div class="chart-container" style="height: 300px; position: relative;">
+                            <canvas id="productionChart"></canvas>
+                        </div>
+                        <!-- Hourly Summary Row -->
+                        <div id="hourly-totals-row" style="margin-top: 1rem; display: flex; justify-content: space-around; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <!-- Totals like "OK: 120 / NG: 2" will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Machines Overview View -->
+            <div id="machines-overview" class="view-section" style="display: none;">
+                <!-- Compact Header Bar -->
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 0.8rem;">
+                    <div style="display: flex; align-items: center; gap: 1.2rem;">
+                        <h2 style="font-size: 1.1rem; margin: 0; color: var(--accent);">LINE AS001</h2>
+                        <div style="display: flex; gap: 1rem; font-size: 0.75rem; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 1rem; font-weight: bold;">
+                            <span style="color: var(--success);">● Run: <span id="count-run">0</span></span>
+                            <span style="color: var(--warning);">● Standby: <span id="count-standby">0</span></span>
+                            <span style="color: var(--danger);">● Stop: <span id="count-stop">0</span></span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 0.8rem; font-size: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <label style="color: var(--text-secondary);">Int:</label>
+                            <input type="number" id="sim-interval" value="2" style="width: 35px; background: #000; border: 1px solid #333; color: #fff; border-radius: 3px; padding: 2px;">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <label style="color: var(--text-secondary);">Skip:</label>
+                            <input type="number" id="sim-skip" value="0" style="width: 35px; background: #000; border: 1px solid #333; color: #fff; border-radius: 3px; padding: 2px;">
+                        </div>
+                        <button class="btn btn-primary" onclick="applySimulationSettings()" style="padding: 2px 8px; font-size: 0.65rem;">Apply</button>
+                        <button class="btn btn-secondary" onclick="clearAllHistory()" style="padding: 2px 8px; font-size: 0.65rem; background: var(--danger); color: white;">Clear</button>
+                        <div id="virtual-clock" style="font-family: monospace; color: var(--accent); font-weight: bold; min-width: 50px; text-align: right; font-size: 1rem;"></div>
+                    </div>
+                </div>
+
+                <!-- Single Column List for Machines (Ultra Compact) -->
+                <div id="machines-grid" style="display: grid; grid-template-columns: 1fr; gap: 0.3rem;">
+                    <!-- Machine cards will be injected here via app.js -->
+                </div>
+            </div>
+
+            <!-- Alarms View -->
+            <div id="alarms" class="view-section" style="display: none;">
+                <div class="card" style="padding: 2rem;">
+                    <h2>Alarm History</h2>
+                    <p class="subtitle" style="margin-top: 1rem;">Recent machine stops and issues.</p>
+                    <table style="width: 100%; margin-top: 2rem; border-collapse: collapse; text-align: left;">
+                        <tr style="border-bottom: 1px solid var(--card-border);">
+                            <th style="padding: 1rem;">Time</th>
+                            <th style="padding: 1rem;">Code</th>
+                            <th style="padding: 1rem;">Description</th>
+                            <th style="padding: 1rem;">Duration</th>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--card-border); background: rgba(239, 68, 68, 0.1);">
+                            <td style="padding: 1rem;">Today 10:15</td>
+                            <td style="padding: 1rem; color: var(--danger); font-weight: bold;">E-102</td>
+                            <td style="padding: 1rem;">Material Empty</td>
+                            <td style="padding: 1rem;">5 min</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--card-border);">
+                            <td style="padding: 1rem;">Yesterday 14:30</td>
+                            <td style="padding: 1rem; color: var(--warning); font-weight: bold;">W-045</td>
+                            <td style="padding: 1rem;">Door Open</td>
+                            <td style="padding: 1rem;">1 min</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Reports View -->
+            <div id="reports" class="view-section" style="display: none;">
+                <div class="card" style="padding: 3rem; text-align: center;">
+                    <h2>Production Reports</h2>
+                    <p class="subtitle" style="margin-top: 1rem; margin-bottom: 2rem;">Export standard AS001 daily production data to Excel.</p>
+                    <button class="btn btn-primary" style="margin: 0 auto;" onclick="exportReport()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Download Latest Excel Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div id="settings" class="view-section" style="display: none;">
+                 <div class="card" style="padding: 2rem;">
+                    <h2>System Settings</h2>
+                    <p class="subtitle" style="margin-top: 0.5rem;">Configuration for AS001 Model Line</p>
+                    
+                    <div style="margin-top: 2.5rem; display: flex; flex-direction: column; gap: 2rem;">
+                        <!-- Target Mode Selection -->
+                        <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--card-border);">
+                            <h3 style="margin-bottom: 1rem; color: var(--accent);">Target Configuration</h3>
+                            <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="radio" name="target-mode" value="manual" checked onchange="toggleTargetMode()"> Manual Mode
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="radio" name="target-mode" value="auto" onchange="toggleTargetMode()"> Auto (Cycle Time)
+                                </label>
+                            </div>
+
+                            <div id="manual-target-input" style="display: block;">
+                                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Set Manual Target (Qty)</label>
+                                <input type="number" id="input-manual-target" value="500" style="background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); color: white; padding: 0.8rem; border-radius: 8px; width: 100%; max-width: 200px; font-size: 1rem;">
+                            </div>
+
+                            <div id="auto-target-input" style="display: none;">
+                                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Ideal Cycle Time (Seconds per Part)</label>
+                                <input type="number" id="input-cycle-time" value="10.0" step="0.1" style="background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); color: white; padding: 0.8rem; border-radius: 8px; width: 100%; max-width: 200px; font-size: 1rem;">
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">Formula: (Time elapsed in shift) / Cycle Time</p>
+                            </div>
+                        </div>
+
+                        <!-- Line Status Detection -->
+                        <div style="background: rgba(59, 130, 246, 0.08); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--card-border);">
+                            <h3 style="margin-bottom: 1rem; color: var(--accent);">Line Status Detection</h3>
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Stop Detection Multiplier of CT</label>
+                            <input type="number" id="input-stop-ct" value="1.0" step="0.1" min="0.1" style="background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); color: white; padding: 0.8rem; border-radius: 8px; width: 100%; max-width: 200px; font-size: 1rem;">
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">If no OK count is detected after CT × multiplier seconds, the line will show STOP.</p>
+                        </div>
+                        </div>
+
+                        <!-- Data Management -->
+                        <div style="background: rgba(239, 68, 68, 0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                            <h3 style="margin-bottom: 1rem; color: var(--danger);">Data Management</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Clear all production counts (Actual, NG) and Reset Timeline for all machines.</p>
+                            <button class="btn btn-secondary" onclick="resetAllProductionData()" style="background: var(--danger); color: white; border: none; padding: 0.8rem 1.5rem;">Reset All Production Data</button>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="saveSettings()" style="width: 100%; max-width: 200px; margin-top: 1rem;">Save Settings</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/static/app.js"></script>
+</body>
+</html>
