@@ -1,5 +1,18 @@
 let productionChart;
 const shiftHistory = {}; // เก็บข้อมูลประวัติแยกตามกะ { 'OP1': { 'day': [], 'night': [] }, ... }
+
+function saveShiftHistory() {
+    localStorage.setItem('shiftHistory', JSON.stringify(shiftHistory));
+}
+
+function loadShiftHistory() {
+    const saved = localStorage.getItem('shiftHistory');
+
+    if (saved) {
+        Object.assign(shiftHistory, JSON.parse(saved));
+    }
+}
+
 let virtualTime = null;
 let simulationTimer = null;
 let lastShift = '';
@@ -182,7 +195,9 @@ function getCurrentShiftInfo() {
 }
 
 function applySimulationSettings() {
-    const interval = parseInt(document.getElementById('sim-interval').value) || 2;
+    let interval = parseInt(document.getElementById('sim-interval').value);
+    if (!interval || interval < 1) interval = 1;
+    document.getElementById('sim-interval').value = interval;
     const skipMinutes = parseInt(document.getElementById('sim-skip').value) || 0;
     
     if (simulationTimer) clearInterval(simulationTimer);
@@ -216,9 +231,15 @@ function applySimulationSettings() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+
+    loadShiftHistory();
+
     await loadSettings();
+
     initChart();
+
     fetchData();
+
     setInterval(fetchData, 2000);
 });
 
@@ -540,6 +561,8 @@ async function fetchAllMachines() {
             }
             shiftHistory[m.name][currentShift][currentIndex] = m.status;
 
+            saveShiftHistory();
+            
             if (m.status === 'RUN') run++;
             else if (m.status === 'STANDBY') standby++;
             else stop++;
