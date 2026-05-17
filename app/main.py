@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
@@ -12,6 +13,14 @@ from . import models, database
 models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="Smart Production Line API (AS001)")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles

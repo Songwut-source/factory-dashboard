@@ -1,3 +1,4 @@
+const API_BASE = "https://factory-dashboard-ajd9.onrender.com";
 let productionChart;
 const shiftHistory = {}; // เก็บข้อมูลประวัติแยกตามกะ { 'OP1': { 'day': [], 'night': [] }, ... }
 
@@ -79,7 +80,7 @@ async function changeMachineStatus(name, status) {
         const currentOk = okEl ? parseInt(okEl.innerText) : 0;
         const currentNg = ngEl ? parseInt(ngEl.innerText) : 0;
 
-        await fetch(`/api/machine/${encodeURIComponent(name)}/update?status=${encodeURIComponent(status)}&good_qty=${currentOk}&ng_qty=${currentNg}`, { method: 'POST' });
+        await fetch(`${API_BASE}/api/machine/${encodeURIComponent(name)}/update?status=${encodeURIComponent(status)}&good_qty=${currentOk}&ng_qty=${currentNg}`, { method: 'POST' });
         // Refresh machines list to show updated status
         fetchAllMachines();
     } catch (e) {
@@ -102,7 +103,7 @@ async function saveSettings() {
 
     console.log("Saving target mode:", targetMode);
 
-    await fetch('/api/settings', {
+    await fetch(`${API_BASE}/api/settings`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -124,7 +125,7 @@ async function saveSettings() {
 
 async function loadSettings() {
     try {
-        const res = await fetch('/api/settings');
+        const res = await fetch(`${API_BASE}/api/settings`);
         const settings = await res.json();
 
         targetMode = settings.targetMode || 'manual';
@@ -173,7 +174,7 @@ async function resetAllProductionData() {
     if (confirm("คุณต้องการล้างข้อมูลการผลิตทั้งหมด (Actual, NG) และล้างแถบสถานะใช่หรือไม่?")) {
         try {
             // 1. Reset backend counts for AS001
-            await fetch(`/api/machine/AS001/update?status=STOP&good_qty=0&ng_qty=0`, { method: 'POST' });
+            await fetch(`${API_BASE}/api/machine/AS001/update?status=STOP&good_qty=0&ng_qty=0`, { method: 'POST' });
             
             // 2. Clear local shift history for all machines
             Object.keys(shiftHistory).forEach(name => {
@@ -186,7 +187,7 @@ async function resetAllProductionData() {
 
             localStorage.removeItem('hourlyHistory');
             localStorage.removeItem('productionChartData');
-            
+
             if (productionChart) {
                 productionChart.data.datasets[0].data = new Array(productionChart.data.labels.length).fill(0);
                 productionChart.data.datasets[1].data = new Array(productionChart.data.labels.length).fill(0);
@@ -330,11 +331,11 @@ function initChart() {
 async function fetchData() {
     try {
         // Fetch machine status
-        const statusRes = await fetch('/api/machine/AS001');
+        const statusRes = await fetch(`${API_BASE}/api/machine/AS001`);
         const machine = await statusRes.json();
         
         // Fetch OEE
-        const oeeRes = await fetch('/api/machine/AS001/oee');
+        const oeeRes = await fetch(`${API_BASE}/api/machine/AS001/oee`);
         
         // Fetch All Machines
         fetchAllMachines();
@@ -395,7 +396,7 @@ async function simulateData() {
     const ng = parseInt(document.getElementById('ng-qty').innerText) + (Math.random() > 0.8 ? 1 : 0);
     
     try {
-        await fetch(`/api/machine/AS001/update?status=${status}&good_qty=${actual}&ng_qty=${ng}`, { method: 'POST' });
+        await fetch(`${API_BASE}/api/machine/AS001/update?status=${status}&good_qty=${actual}&ng_qty=${ng}`, { method: 'POST' });
         fetchData();
     } catch(e) {
         console.error(e);
@@ -408,7 +409,7 @@ async function incrementActual() {
     const status = document.getElementById('machine-status-text').innerText || 'RUN';
     
     try {
-        await fetch(`/api/machine/AS001/update?status=${status}&good_qty=${currentOk + 1}&ng_qty=${currentNg}`, { method: 'POST' });
+        await fetch(`${API_BASE}/api/machine/AS001/update?status=${status}&good_qty=${currentOk + 1}&ng_qty=${currentNg}`, { method: 'POST' });
         fetchData();
     } catch(e) {
         console.error(e);
@@ -425,7 +426,7 @@ async function setManualCounts() {
     const ng = ngInput === '' ? parseInt(document.getElementById('ng-qty').innerText) : parseInt(ngInput);
 
     try {
-        await fetch(`/api/machine/AS001/update?status=${status}&good_qty=${ok}&ng_qty=${ng}`, { method: 'POST' });
+        await fetch(`${API_BASE}/api/machine/AS001/update?status=${status}&good_qty=${ok}&ng_qty=${ng}`, { method: 'POST' });
         fetchData();
         // ล้างช่องกรอกข้อมูล
         document.getElementById('manual-ok-input').value = '';
@@ -437,7 +438,7 @@ async function setManualCounts() {
 
 async function simulateAllMachines() {
     try {
-        await fetch('/api/machines/simulate', { method: 'POST' });
+        await fetch(`${API_BASE}/api/machines/simulate`, { method: 'POST' });
         fetchAllMachines(); // Fetch immediately to update UI
     } catch(e) {
         console.error(e);
@@ -446,7 +447,7 @@ async function simulateAllMachines() {
 
 async function exportReport() {
     try {
-        const res = await fetch('/api/report/export');
+        const res = await fetch(`${API_BASE}/api/report/export`);
         if(res.ok) {
             // Initiate download
             const blob = await res.blob();
@@ -574,7 +575,7 @@ function updateProductionChart(machine) {
 
 async function fetchAllMachines() {
     try {
-        const res = await fetch('/api/machines');
+        const res = await fetch(`${API_BASE}/api/machines`);
         let machines = await res.json();
         
         // Filter out AS001 (Line overview) and sort OP machines correctly
