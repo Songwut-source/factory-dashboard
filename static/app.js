@@ -32,6 +32,38 @@ let lastOkActivitySeconds = 0;
 
 // Production Tracking for Dashboard Chart
 let hourlyHistory = {}; // Persistent hourly totals
+function saveHourlyHistory() {
+    localStorage.setItem('hourlyHistory', JSON.stringify(hourlyHistory));
+}
+
+function loadHourlyHistory() {
+    const saved = localStorage.getItem('hourlyHistory');
+    if (saved) {
+        hourlyHistory = JSON.parse(saved);
+    }
+}
+
+function saveChartData() {
+    if (!productionChart) return;
+
+    localStorage.setItem('productionChartData', JSON.stringify({
+        labels: productionChart.data.labels,
+        good: productionChart.data.datasets[0].data,
+        ng: productionChart.data.datasets[1].data
+    }));
+}
+
+function loadChartData() {
+    const saved = localStorage.getItem('productionChartData');
+    if (!saved || !productionChart) return;
+
+    const data = JSON.parse(saved);
+
+    productionChart.data.labels = data.labels;
+    productionChart.data.datasets[0].data = data.good;
+    productionChart.data.datasets[1].data = data.ng;
+    productionChart.update();
+}
 
 function toggleTargetMode() {
     targetMode = document.querySelector('input[name="target-mode"]:checked').value;
@@ -151,6 +183,10 @@ async function resetAllProductionData() {
 
             // 3. Clear Chart and Hourly History
             hourlyHistory = {};
+
+            localStorage.removeItem('hourlyHistory');
+            localStorage.removeItem('productionChartData');
+            
             if (productionChart) {
                 productionChart.data.datasets[0].data = new Array(productionChart.data.labels.length).fill(0);
                 productionChart.data.datasets[1].data = new Array(productionChart.data.labels.length).fill(0);
@@ -233,10 +269,12 @@ function applySimulationSettings() {
 document.addEventListener('DOMContentLoaded', async () => {
 
     loadShiftHistory();
+    loadHourlyHistory();
 
     await loadSettings();
 
     initChart();
+    loadChartData();
 
     fetchData();
 
@@ -506,6 +544,9 @@ function updateProductionChart(machine) {
         productionChart.data.datasets[1].data[slotIndex] = ngInHour;
         productionChart.update();
 
+        saveHourlyHistory();
+        saveChartData();
+
         // Update Hourly Totals Row
         const totalsRow = document.getElementById('hourly-totals-row');
         if (totalsRow) {
@@ -562,7 +603,7 @@ async function fetchAllMachines() {
             shiftHistory[m.name][currentShift][currentIndex] = m.status;
 
             saveShiftHistory();
-            
+
             if (m.status === 'RUN') run++;
             else if (m.status === 'STANDBY') standby++;
             else stop++;
