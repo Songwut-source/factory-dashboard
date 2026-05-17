@@ -43,12 +43,62 @@ async function changeMachineStatus(name, status) {
     }
 }
 
-function saveSettings() {
-    manualTargetValue = parseInt(document.getElementById('input-manual-target').value) || 0;
-    idealCycleTime = parseFloat(document.getElementById('input-cycle-time').value) || 1.0;
-    stopDetectionMultiplier = parseFloat(document.getElementById('input-stop-ct').value) || stopDetectionMultiplier;
+async function saveSettings() {
+
+    const selectedMode = document.querySelector('input[name="target-mode"]:checked');
+
+    targetMode = selectedMode ? selectedMode.value : 'manual';
+
+    manualTargetValue = parseInt(document.getElementById('input-manual-target').value) || 500;
+
+    idealCycleTime = parseFloat(document.getElementById('input-cycle-time').value) || 10.0;
+
+    stopDetectionMultiplier = parseFloat(document.getElementById('input-stop-ct').value) || 1.0;
+
+    console.log("Saving target mode:", targetMode);
+
+    await fetch('/api/settings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            targetMode: targetMode,
+            manualTargetValue: manualTargetValue,
+            idealCycleTime: idealCycleTime,
+            stopDetectionMultiplier: stopDetectionMultiplier
+        })
+    });
+
     alert("Settings saved successfully!");
-    fetchData(); // Refresh UI to apply new settings
+
+    await loadSettings();
+
+    fetchData();
+}
+
+async function loadSettings() {
+    try {
+        const res = await fetch('/api/settings');
+        const settings = await res.json();
+
+        targetMode = settings.targetMode || 'manual';
+        manualTargetValue = settings.manualTargetValue || 500;
+        idealCycleTime = settings.idealCycleTime || 10.0;
+        stopDetectionMultiplier = settings.stopDetectionMultiplier || 1.0;
+
+        const radio = document.querySelector(`input[name="target-mode"][value="${targetMode}"]`);
+        if (radio) radio.checked = true;
+
+        document.getElementById('input-manual-target').value = manualTargetValue;
+        document.getElementById('input-cycle-time').value = idealCycleTime;
+        document.getElementById('input-stop-ct').value = stopDetectionMultiplier;
+
+        toggleTargetMode();
+
+    } catch (error) {
+        console.error("Load settings error:", error);
+    }
 }
 
 function trackOkActivity(machine) {
@@ -165,10 +215,11 @@ function applySimulationSettings() {
     }, interval * 1000);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadSettings();
     initChart();
     fetchData();
-    setInterval(fetchData, 2000); // Poll every 2 seconds
+    setInterval(fetchData, 2000);
 });
 
 function initChart() {

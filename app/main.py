@@ -139,3 +139,51 @@ def simulate_all_machines(db: Session = Depends(database.get_db)):
         m.status = random.choice(statuses)
     db.commit()
     return {"status": "ok"}
+
+@app.get("/api/settings")
+def get_settings(db: Session = Depends(database.get_db)):
+    setting = db.query(models.AppSetting).filter(models.AppSetting.id == 1).first()
+
+    if not setting:
+        setting = models.AppSetting(
+            id=1,
+            target_mode="manual",
+            manual_target_value=500,
+            ideal_cycle_time=10.0,
+            stop_detection_multiplier=1.0
+        )
+        db.add(setting)
+        db.commit()
+        db.refresh(setting)
+
+    return {
+        "targetMode": setting.target_mode,
+        "manualTargetValue": setting.manual_target_value,
+        "idealCycleTime": setting.ideal_cycle_time,
+        "stopDetectionMultiplier": setting.stop_detection_multiplier
+    }
+
+
+@app.post("/api/settings")
+def save_settings(settings: dict, db: Session = Depends(database.get_db)):
+    setting = db.query(models.AppSetting).filter(models.AppSetting.id == 1).first()
+
+    if not setting:
+        setting = models.AppSetting(id=1)
+        db.add(setting)
+
+    setting.target_mode = settings.get("targetMode", "manual")
+    setting.manual_target_value = int(settings.get("manualTargetValue", 500))
+    setting.ideal_cycle_time = float(settings.get("idealCycleTime", 10.0))
+    setting.stop_detection_multiplier = float(settings.get("stopDetectionMultiplier", 1.0))
+
+    db.commit()
+    db.refresh(setting)
+
+    return {
+        "message": "Settings saved successfully",
+        "targetMode": setting.target_mode,
+        "manualTargetValue": setting.manual_target_value,
+        "idealCycleTime": setting.ideal_cycle_time,
+        "stopDetectionMultiplier": setting.stop_detection_multiplier
+    }

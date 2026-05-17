@@ -34,3 +34,13 @@ class AlarmLog(Base):
     end_time = Column(DateTime(timezone=True), nullable=True)
     duration_seconds = Column(Integer, nullable=True) # Calculated when alarm ends
     is_loss_time = Column(Boolean, default=True) # Whether it should be deducted from OEE
+
+class AppSetting(Base):
+    __tablename__ = "app_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    target_mode = Column(String, default="manual")
+    manual_target_value = Column(Integer, default=500)
+    ideal_cycle_time = Column(Float, default=10.0)
+    stop_detection_multiplier = Column(Float, default=1.0)
+    
