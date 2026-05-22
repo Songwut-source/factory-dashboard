@@ -1,3 +1,74 @@
+<script>
+let selectedOP = "ALL";
+
+function selectOP(op) {
+  selectedOP = op;
+
+  document.querySelectorAll(".op-buttons button").forEach(btn => {
+    btn.classList.remove("active");
+  });
+
+  event.target.classList.add("active");
+
+  loadAlarms();
+}
+
+function loadAlarms() {
+  const fromDate = document.getElementById("fromDate").value;
+  const toDate = document.getElementById("toDate").value;
+  const tbody = document.getElementById("alarmTableBody");
+
+  const alarmData = [
+    {
+      op_name: "OP1",
+      station_name: "High Pressure Load",
+      message: "001 : AREA SENSOR FAULT",
+      count: 4,
+      occured_time: "5/22/2026 2:48 PM",
+      cleared_time: "5/22/2026 2:48 PM",
+      start_time: "5/22/2026 2:49 PM",
+      reset_time: "00:00:15",
+      recovery_time: "00:00:24"
+    },
+    {
+      op_name: "OP2",
+      station_name: "Med Leak Test 01",
+      message: "304 : PLUG BLEEDER LH",
+      count: 18,
+      occured_time: "5/22/2026 2:38 PM",
+      cleared_time: "5/22/2026 2:38 PM",
+      start_time: "5/22/2026 2:38 PM",
+      reset_time: "00:00:03",
+      recovery_time: "00:00:15"
+    }
+  ];
+
+  let filteredData = alarmData;
+
+  if (selectedOP !== "ALL") {
+    filteredData = filteredData.filter(row => row.op_name === selectedOP);
+  }
+
+  tbody.innerHTML = "";
+
+  filteredData.forEach(row => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${row.station_name}</td>
+        <td>${row.message}</td>
+        <td>${row.count}</td>
+        <td>${row.occured_time}</td>
+        <td>${row.cleared_time}</td>
+        <td>${row.start_time}</td>
+        <td>${row.reset_time}</td>
+        <td>${row.recovery_time}</td>
+      </tr>
+    `;
+  });
+}
+
+document.addEventListener("DOMContentLoaded", loadAlarms);
+</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -140,28 +211,54 @@
             <!-- Alarms View -->
             <div id="alarms" class="view-section" style="display: none;">
                 <div class="card" style="padding: 2rem;">
-                    <h2>Alarm History</h2>
-                    <p class="subtitle" style="margin-top: 1rem;">Recent machine stops and issues.</p>
-                    <table style="width: 100%; margin-top: 2rem; border-collapse: collapse; text-align: left;">
-                        <tr style="border-bottom: 1px solid var(--card-border);">
-                            <th style="padding: 1rem;">Time</th>
-                            <th style="padding: 1rem;">Code</th>
-                            <th style="padding: 1rem;">Description</th>
-                            <th style="padding: 1rem;">Duration</th>
-                        </tr>
-                        <tr style="border-bottom: 1px solid var(--card-border); background: rgba(239, 68, 68, 0.1);">
-                            <td style="padding: 1rem;">Today 10:15</td>
-                            <td style="padding: 1rem; color: var(--danger); font-weight: bold;">E-102</td>
-                            <td style="padding: 1rem;">Material Empty</td>
-                            <td style="padding: 1rem;">5 min</td>
-                        </tr>
-                        <tr style="border-bottom: 1px solid var(--card-border);">
-                            <td style="padding: 1rem;">Yesterday 14:30</td>
-                            <td style="padding: 1rem; color: var(--warning); font-weight: bold;">W-045</td>
-                            <td style="padding: 1rem;">Door Open</td>
-                            <td style="padding: 1rem;">1 min</td>
-                        </tr>
-                    </table>
+            <h2>Alarm History</h2>
+<p class="subtitle" style="margin-top: 1rem;">Recent machine stops and issues.</p>
+
+<div class="alarm-filter">
+  <div class="op-buttons">
+    <button onclick="selectOP('ALL')">ALL</button>
+    <button onclick="selectOP('OP1')">OP1</button>
+    <button onclick="selectOP('OP2')">OP2</button>
+    <button onclick="selectOP('OP5')">OP5</button>
+    <button onclick="selectOP('OP7')">OP7</button>
+    <button onclick="selectOP('OP8')">OP8</button>
+    <button onclick="selectOP('OP9')">OP9</button>
+    <button onclick="selectOP('OP10')">OP10</button>
+    <button onclick="selectOP('OP11')">OP11</button>
+    <button onclick="selectOP('OP12')">OP12</button>
+    <button onclick="selectOP('OP13')">OP13</button>
+  </div>
+
+  <div class="date-filter">
+    <label>From</label>
+    <input type="date" id="fromDate">
+
+    <label>To</label>
+    <input type="date" id="toDate">
+
+    <button onclick="loadAlarms()">View Alarm List</button>
+  </div>
+</div>
+
+<div style="overflow-x: auto;">
+  <table class="alarm-table">
+    <thead>
+      <tr>
+        <th>StationName</th>
+        <th>Messages</th>
+        <th>Count</th>
+        <th>Occured_Time</th>
+        <th>Cleared_Time</th>
+        <th>Start_Time</th>
+        <th>Reset_Time</th>
+        <th>Recovery_Time</th>
+      </tr>
+    </thead>
+
+    <tbody id="alarmTableBody">
+    </tbody>
+  </table>
+</div>
                 </div>
             </div>
 
@@ -233,3 +330,5 @@
     <script src="/static/app.js"></script>
 </body>
 </html>
+<script>
+    

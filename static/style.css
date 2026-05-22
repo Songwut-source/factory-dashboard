@@ -597,3 +597,77 @@ body {
         height: auto !important;
     }
 }
+
+    .alarm-filter {
+        margin-top: 24px;
+        margin-bottom: 18px;
+    }
+
+    .op-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+
+    .op-buttons button {
+        background: #1e293b;
+        color: white;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 8px 16px;
+        cursor: pointer;
+    }
+
+    .op-buttons button:hover,
+    .op-buttons button.active {
+        background: #3b82f6;
+    }
+
+    .date-filter {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        color: white;
+    }
+
+    .date-filter input {
+        background: #0f172a;
+        color: white;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 8px;
+    }
+
+    .date-filter button {
+        background: #22c55e;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 9px 20px;
+        cursor: pointer;
+    }
+
+    .alarm-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+        color: white;
+    }
+
+    .alarm-table th,
+    .alarm-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--card-border);
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .alarm-table th {
+        color: #cbd5e1;
+    }
+
+    .alarm-table tbody tr:hover {
+        background: rgba(59, 130, 246, 0.15);
+}

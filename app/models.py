@@ -44,3 +44,20 @@ class AppSetting(Base):
     ideal_cycle_time = Column(Float, default=10.0)
     stop_detection_multiplier = Column(Float, default=1.0)
     
+class TimelineHistory(Base):
+    __tablename__ = "timeline_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    machine_name = Column(String, index=True)
+    shift = Column(String, index=True)  # day / night
+    block_index = Column(Integer)
+    status = Column(String)
+
+
+class ChartHistory(Base):
+    __tablename__ = "chart_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slot_label = Column(String, index=True)
+    good_qty = Column(Integer, default=0)
+    ng_qty = Column(Integer, default=0)
