@@ -54,7 +54,7 @@ function loadAlarms() {
   filteredData.forEach(row => {
     tbody.innerHTML += `
       <tr>
-        <td>${row.Machine_name}</td>
+        <td>${row.station_name}</td>
         <td>${row.message}</td>
         <td>${row.count}</td>
         <td>${row.occured_time}</td>
@@ -244,7 +244,7 @@ document.addEventListener("DOMContentLoaded", loadAlarms);
   <table class="alarm-table">
     <thead>
       <tr>
-        <th>StationName</th>
+        <th>Machine_Name</th>
         <th>Messages</th>
         <th>Count</th>
         <th>Occured_Time</th>
