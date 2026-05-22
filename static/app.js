@@ -739,7 +739,7 @@ async function fetchAllMachines() {
                                 <button class="mini-btn mini-run" onclick="changeMachineStatus('${m.name}','RUN')">RUN</button>
                                 <button class="mini-btn mini-standby" onclick="changeMachineStatus('${m.name}','STANDBY')">STANDBY</button>
                                 <button class="mini-btn mini-stop" onclick="changeMachineStatus('${m.name}','STOP')">STOP</button>
-                                <button class="mini-btn mini-alarm" onclick="changeMachineStatus('${m.name}','ALARM')">ALARM</button>
+                                <button class="mini-btn mini-alarm"onclick="triggerAlarm('${m.name}')">ALARM</button>
                             </div>
                         </div>
                     </div>
@@ -791,3 +791,73 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateCurrentDatetime, 1000);
 });
 
+const machineOPMap = {
+  OP1: [
+    "Plug bleeder tightening & Mark lot No.",
+  ],
+  OP2: [
+    "Seat union press in",
+  ],
+  OP5: [
+    "Piston press in & Through hole check"
+  ],
+  OP7: [
+    "Bolt tightening No.1"
+  ],
+  OP8: [
+    "Bolt tightening No.2"
+  ],
+  OP9: [
+    "Low leak test"
+  ],
+  OP10: [
+    "High pressure load"
+  ],
+  OP11: [
+    "Med leak test No.1"
+  ],
+  OP12: [
+    "Med leak test No.2"
+  ],
+  OP13: [
+    "Pad assembly"
+  ]
+};
+
+let alarmData = [];
+
+function triggerAlarm(machineName) {
+
+    let opName = "UNKNOWN";
+
+    if (machineName.includes("OP1 Plug bleeder tightening & Mark lot No.")) opName = "OP1";
+    else if (machineName.includes("OP2 Seat union press in")) opName = "OP2";
+    else if (machineName.includes("OP5 Piston press in & Through hole check")) opName = "OP5";
+    else if (machineName.includes("OP6 Bolt tightening No.1")) opName = "OP6";
+    else if (machineName.includes("OP7 Bolt tightening No.2")) opName = "OP7";
+    else if (machineName.includes("OP8 Low leak test")) opName = "OP8";
+    else if (machineName.includes("OP9 High pressure load")) opName = "OP9";
+    else if (machineName.includes("OP10 Med leak test No.1")) opName = "OP10";
+    else if (machineName.includes("OP11 Med leak test No.2")) opName = "OP11";
+    else if (machineName.includes("OP12 Pad assembly")) opName = "OP12";
+
+    changeMachineStatus(machineName, 'ALARM');
+
+    const now = new Date();
+
+    const newAlarm = {
+        op_name: opName,
+        station_name: machineName,
+        message: "Machine Alarm",
+        count: 1,
+        occured_time: now.toLocaleString(),
+        cleared_time: "",
+        start_time: now.toLocaleString(),
+        reset_time: "00:00:00",
+        recovery_time: "00:00:00"
+    };
+
+    alarmData.unshift(newAlarm);
+
+    loadAlarms();
+}
