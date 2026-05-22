@@ -1,4 +1,37 @@
 const API_BASE = "https://factory-dashboard-ajd9.onrender.com";
+
+async function loadTimelineFromDB() {
+    try {
+        const res = await fetch(`${API_BASE}/api/timeline`);
+        const data = await res.json();
+
+        Object.assign(shiftHistory, data);
+
+    } catch (error) {
+        console.error("Load timeline error:", error);
+    }
+}
+
+
+async function saveTimelineToDB(machineName, shift, blockIndex, status) {
+    try {
+        await fetch(`${API_BASE}/api/timeline`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                machineName: machineName,
+                shift: shift,
+                blockIndex: blockIndex,
+                status: status
+            })
+        });
+    } catch (error) {
+        console.error("Save timeline error:", error);
+    }
+}
+
 let productionChart;
 const shiftHistory = {}; // เก็บข้อมูลประวัติแยกตามกะ { 'OP1': { 'day': [], 'night': [] }, ... }
 
@@ -273,6 +306,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadHourlyHistory();
 
     await loadSettings();
+    await loadTimelineFromDB();
 
     initChart();
     loadChartData();
@@ -602,6 +636,7 @@ async function fetchAllMachines() {
                 };
             }
             shiftHistory[m.name][currentShift][currentIndex] = m.status;
+            saveTimelineToDB(m.name, currentShift, currentIndex, m.status);
 
             saveShiftHistory();
 

@@ -196,3 +196,56 @@ def save_settings(settings: dict, db: Session = Depends(database.get_db)):
         "idealCycleTime": setting.ideal_cycle_time,
         "stopDetectionMultiplier": setting.stop_detection_multiplier
     }
+
+@app.get("/api/timeline")
+def get_timeline(db: Session = Depends(database.get_db)):
+    rows = db.query(models.TimelineHistory).all()
+
+    result = {}
+
+    for r in rows:
+        if r.machine_name not in result:
+            result[r.machine_name] = {
+                "day": [None] * 360,
+                "night": [None] * 360
+            }
+
+        result[r.machine_name][r.shift][r.block_index] = r.status
+
+    return result
+
+
+@app.post("/api/timeline")
+def save_timeline(data: dict, db: Session = Depends(database.get_db)):
+    machine_name = data.get("machineName")
+    shift = data.get("shift")
+    block_index = data.get("blockIndex")
+    status = data.get("status")
+
+    row = db.query(models.TimelineHistory).filter(
+        models.TimelineHistory.machine_name == machine_name,
+        models.TimelineHistory.shift == shift,
+        models.TimelineHistory.block_index == block_index
+    ).first()
+
+    if not row:
+        row = models.TimelineHistory(
+            machine_name=machine_name,
+            shift=shift,
+            block_index=block_index,
+            status=status
+        )
+        db.add(row)
+    else:
+        row.status = status
+
+    db.commit()
+
+    return {"message": "timeline saved"}
+
+
+@app.delete("/api/timeline")
+def clear_timeline(db: Session = Depends(database.get_db)):
+    db.query(models.TimelineHistory).delete()
+    db.commit()
+    return {"message": "timeline cleared"}
