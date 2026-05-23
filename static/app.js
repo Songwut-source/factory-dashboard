@@ -715,7 +715,7 @@ async function fetchAllMachines() {
             card.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 1.5rem; width: 100%;">
                     <!-- OP Name (Left) -->
-                    <div style="min-width: 220px; font-weight: 900; font-size: 1.2rem; color: var(--accent);">
+                    <div style="width: 220px;font-weight: 900;font-size: 1.2rem;color: var(--accent);">
                             ${m.name} - ${machineDisplayNames[m.name] || ""}
                         </div>
                     
