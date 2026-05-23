@@ -742,7 +742,7 @@ machines.sort((a, b) => {
                         </div>
                     
                     <!-- Timeline Area (Middle) -->
-                        <div style="width: 920px;min-width: 920px;display: flex;flex-direction: column;gap: 5px;justify-content: center;margin-left: -80px;">
+                        <div style="width: 980px;min-width: 980px;display: flex;flex-direction: column;gap: 5px;justify-content: center;margin-left: -80px;">
                         <!-- The Bar -->
                         <div style="display: grid; grid-template-columns: 45px 1fr; column-gap: 8px;">
                         <div>
