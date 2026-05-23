@@ -723,7 +723,12 @@ machines.sort((a, b) => {
                 labels.push({ text: shiftType === 'day' ? '20:20' : '08:20', pos: 100 });
 
                 return labels.map(l => `
-                    <span style="position: absolute; left: ${l.pos}%; transform: translateX(-50%); white-space: nowrap;">
+                    <span style="
+                        position: absolute;
+                        left: ${l.pos}%;
+                        transform: ${l.pos === 0 ? 'translateX(0)' : l.pos === 100 ? 'translateX(-100%)' : 'translateX(-50%)'};
+                        white-space: nowrap;
+                    ">
                         ${l.text}
                     </span>
                 `).join('');
