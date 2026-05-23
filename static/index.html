@@ -1,50 +1,3 @@
-<script>
-let selectedOP = "ALL";
-
-function selectOP(op) {
-  selectedOP = op;
-
-  document.querySelectorAll(".op-buttons button").forEach(btn => {
-    btn.classList.remove("active");
-  });
-
-  event.target.classList.add("active");
-
-  loadAlarms();
-}
-
-function loadAlarms() {
-  const tbody = document.getElementById("alarmTableBody");
-  if (!tbody) return;
-
-  let filteredData = alarmData;
-
-  if (selectedOP !== "ALL") {
-    filteredData = alarmData.filter(row => row.op_name === selectedOP);
-  }
-
-  tbody.innerHTML = "";
-
-  filteredData.forEach(row => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${row.station_name}</td>
-        <td>${row.message}</td>
-        <td>${row.count}</td>
-        <td>${row.occured_time}</td>
-        <td>${row.cleared_time}</td>
-        <td>${row.start_time}</td>
-        <td>${row.reset_time}</td>
-        <td>${row.recovery_time}</td>
-      </tr>
-    `;
-  });
-}
-
-let alarmData = [];
-
-document.addEventListener("DOMContentLoaded", loadAlarms);
-</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -306,5 +259,3 @@ document.addEventListener("DOMContentLoaded", loadAlarms);
     <script src="/static/app.js"></script>
 </body>
 </html>
-<script>
-    

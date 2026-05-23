@@ -824,9 +824,30 @@ const machineOPMap = {
   ]
 };
 
+// ==========================
+// Alarm System
+// ==========================
+
+let selectedOP = "ALL";
 let alarmData = [];
 
+function selectOP(op) {
+
+    selectedOP = op;
+
+    document.querySelectorAll(".op-buttons button").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    if (event && event.target) {
+        event.target.classList.add("active");
+    }
+
+    loadAlarms();
+}
+
 function triggerAlarm(machineName) {
+
     const opName = machineName.split(" ")[0];
 
     changeMachineStatus(machineName, "ALARM");
@@ -850,4 +871,37 @@ function triggerAlarm(machineName) {
     console.log("Alarm Added:", newAlarm);
 
     loadAlarms();
+}
+
+function loadAlarms() {
+
+    const tbody = document.getElementById("alarmTableBody");
+
+    if (!tbody) return;
+
+    let filteredData = alarmData;
+
+    if (selectedOP !== "ALL") {
+        filteredData = alarmData.filter(
+            row => row.op_name === selectedOP
+        );
+    }
+
+    tbody.innerHTML = "";
+
+    filteredData.forEach(row => {
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${row.station_name}</td>
+                <td>${row.message}</td>
+                <td>${row.count}</td>
+                <td>${row.occured_time}</td>
+                <td>${row.cleared_time}</td>
+                <td>${row.start_time}</td>
+                <td>${row.reset_time}</td>
+                <td>${row.recovery_time}</td>
+            </tr>
+        `;
+    });
 }
