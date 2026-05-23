@@ -295,7 +295,29 @@ def create_alarm(data: AlarmCreate, db: Session = Depends(database.get_db)):
 
 @app.post("/api/alarms/{machine_name}/reset")
 def reset_alarm(machine_name: str, db: Session = Depends(database.get_db)):
-    alarm = db.query(models.AlarmHistory)
+
+    alarm = db.query(models.AlarmHistory).filter(
+        models.AlarmHistory.station_name == machine_name,
+        models.AlarmHistory.cleared_time == None
+    ).order_by(models.AlarmHistory.id.desc()).first()
+
+    if not alarm:
+        return {"message": "No active alarm"}
+
+    now = datetime.now()
+
+    alarm.cleared_time = now
+
+    alarm.reset_time = format_duration(
+        alarm.occured_time,
+        now
+    )
+
+    db.commit()
+
+    db.refresh(alarm)
+
+    return alarm
 
 @app.post("/api/alarms/{machine_name}/run")
 def run_alarm(machine_name: str, db: Session = Depends(database.get_db)):
