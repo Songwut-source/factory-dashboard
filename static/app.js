@@ -748,7 +748,7 @@ machines.sort((a, b) => {
                     </div>
                         
                         <!-- Day Scale with Label -->
-                        <div style="display: grid; grid-template-columns: 45px 1fr; column-gap: 8px; padding-left: 0;">
+                        <div style="display: grid; grid-template-columns: 55px 1fr; column-gap: 8px; padding-left: 0;">
                             <div style="font-size: 0.55rem; font-weight: 900; color: ${currentShift === 'day' ? 'var(--accent)' : 'var(--text-secondary)'}; text-align: right;">DAY</div>
                             <div style="position: relative; height: 14px; font-size: 0.6rem; color: ${currentShift === 'day' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight: 700;">
                                 ${renderTimeScale('day')}
@@ -756,7 +756,7 @@ machines.sort((a, b) => {
                         </div>
 
                         <!-- Night Scale with Label -->
-                        <div style="display: grid; grid-template-columns: 45px 1fr; column-gap: 8px; padding-left: 0;">
+                        <div style="display: grid; grid-template-columns: 55px 1fr; column-gap: 8px; padding-left: 0;">
                             <div style="font-size: 0.55rem; font-weight: 900; color: ${currentShift === 'night' ? 'var(--accent)' : 'var(--text-secondary)'}; text-align: right;">NIGHT</div>
                             <div style="position: relative; height: 14px; font-size: 0.6rem; color: ${currentShift === 'night' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight: 700;">
                                 ${renderTimeScale('night')}
