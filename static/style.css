@@ -671,3 +671,8 @@ body {
     .alarm-table tbody tr:hover {
         background: rgba(59, 130, 246, 0.15);
 }
+
+    .mini-reset {
+        background: #6366f1;
+        color: white;
+}

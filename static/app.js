@@ -814,7 +814,7 @@ machines.sort((a, b) => {
                         </div>
                     
                     <!-- Timeline Area (Middle) -->
-                        <div style="width: 1060px;min-width: 1060px;display: flex;flex-direction: column;gap: 5px;justify-content: center;margin-left: -80px;">
+                        <div style="width: 1020px;min-width: 1020px;display: flex;flex-direction: column;gap: 5px;justify-content: center;margin-left: -80px;">
                         <!-- The Bar -->
                         <div style="display: grid; grid-template-columns: 45px 1fr; column-gap: 8px;">
                         <div>
@@ -849,10 +849,11 @@ machines.sort((a, b) => {
                                 <span style="color: ${colorVar}; font-weight: 900; font-size: 1.1rem; letter-spacing: 1px;">${m.status}</span>
                             </div>
                             <div style="display:flex; gap:6px;" class="op-controls">
-                                <button class="mini-btn mini-run" onclick="changeMachineStatus('${m.name}','RUN')">RUN</button>
+                                <button class="mini-btn mini-run" onclick="runMachine('${m.name}')">RUN</button>
                                 <button class="mini-btn mini-standby" onclick="changeMachineStatus('${m.name}','STANDBY')">STANDBY</button>
                                 <button class="mini-btn mini-stop" onclick="changeMachineStatus('${m.name}','STOP')">STOP</button>
                                 <button class="mini-btn mini-alarm" onclick="triggerAlarm('${m.name}')">ALARM</button>
+                                <button class="mini-btn mini-reset" onclick="resetAlarm('${m.name}')">RESET</button>
                             </div>
                         </div>
                     </div>
@@ -972,16 +973,68 @@ function triggerAlarm(machineName) {
         station_name: machineName,
         message: "Machine Alarm",
         count: 1,
-        occured_time: now.toLocaleString(),
+
+        occured_time_raw: now,
+        cleared_time_raw: null,
+        start_time_raw: null,
+
+        occured_time: formatDateTime(now),
         cleared_time: "",
-        start_time: now.toLocaleString(),
-        reset_time: "00:00:00",
-        recovery_time: "00:00:00"
+        start_time: "",
+        reset_time: "",
+        recovery_time: ""
     };
 
     alarmData.unshift(newAlarm);
 
     console.log("Alarm Added:", newAlarm);
+
+    loadAlarms();
+}
+
+function resetAlarm(machineName) {
+
+    const now = new Date();
+
+    const alarm = alarmData.find(row =>
+        row.station_name === machineName &&
+        row.cleared_time === ""
+    );
+
+    if (!alarm) {
+        alert("No active alarm for " + machineName);
+        return;
+    }
+
+    alarm.cleared_time_raw = now;
+    alarm.cleared_time = formatDateTime(now);
+    alarm.reset_time = diffTime(alarm.occured_time_raw, now);
+
+    changeMachineStatus(machineName, "STOP");
+
+    console.log("Alarm Reset:", alarm);
+
+    loadAlarms();
+}
+
+function runMachine(machineName) {
+
+    const now = new Date();
+
+    const alarm = alarmData.find(row =>
+        row.station_name === machineName &&
+        row.start_time === ""
+    );
+
+    if (alarm) {
+        alarm.start_time_raw = now;
+        alarm.start_time = formatDateTime(now);
+        alarm.recovery_time = diffTime(alarm.occured_time_raw, now);
+    }
+
+    changeMachineStatus(machineName, "RUN");
+
+    console.log("Machine Run:", machineName);
 
     loadAlarms();
 }
@@ -1017,4 +1070,24 @@ function loadAlarms() {
             </tr>
         `;
     });
+}
+
+function diffTime(start, end) {
+    const diffMs = end - start;
+
+    const totalSeconds = Math.floor(diffMs / 1000);
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    return [
+        String(hours).padStart(2, "0"),
+        String(minutes).padStart(2, "0"),
+        String(seconds).padStart(2, "0")
+    ].join(":");
+}
+
+function formatDateTime(date) {
+    return date.toLocaleString();
 }
