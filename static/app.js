@@ -722,7 +722,7 @@ async function fetchAllMachines() {
                     <!-- Timeline Area (Middle) -->
                     <div style="flex: 1; display: flex; flex-direction: column; gap: 5px; justify-content: center;">
                         <!-- The Bar -->
-                        <div style="height: 35px; display: flex; border-radius: 5px; overflow: hidden; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); margin-left: 80px;">
+                        <div style="height: 35px;display: flex;border-radius: 5px;overflow: hidden;background: rgba(0,0,0,0.3);border: 1px solid rgba(255,255,255,0.1);box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);width: 100%;">
                             ${renderBlocks(currentShift)}
                         </div>
                         
