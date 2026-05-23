@@ -277,6 +277,77 @@ function getCurrentShiftInfo() {
     return { shift, index, elapsedSeconds: secondsIntoShift };
 }
 
+let lastAutoResetKey = "";
+
+async function autoResetAtShiftChange() {
+    const now = virtualTime || new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+
+    const resetKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${hour}-${minute}`;
+
+    if (lastAutoResetKey === resetKey) return;
+
+    if (
+        (hour === 8 && minute === 20) ||
+        (hour === 20 && minute === 20)
+    ) {
+        console.log("Auto Reset Shift:", resetKey);
+
+        lastAutoResetKey = resetKey;
+
+        await resetShiftData();
+    }
+}
+
+async function resetShiftData() {
+    try {
+        await fetch(`${API_BASE}/api/timeline`, {
+            method: "DELETE"
+        });
+
+        Object.keys(shiftHistory).forEach(name => {
+            shiftHistory[name].day = new Array(SHIFT_BLOCKS).fill(null);
+            shiftHistory[name].night = new Array(SHIFT_BLOCKS).fill(null);
+        });
+
+        localStorage.removeItem("shiftHistory");
+        localStorage.removeItem("hourlyHistory");
+        localStorage.removeItem("productionChartData");
+
+        hourlyHistory = {};
+
+        await fetch(`${API_BASE}/api/machine/AS001/update?status=RUN&good_qty=0&ng_qty=0`, {
+            method: "POST"
+        });
+
+        const res = await fetch(`${API_BASE}/api/machines`);
+        const machines = await res.json();
+
+        for (const m of machines) {
+            if (m.name !== "AS001") {
+                await fetch(`${API_BASE}/api/machine/${encodeURIComponent(m.name)}/update?status=RUN&good_qty=0&ng_qty=0`, {
+                    method: "POST"
+                });
+            }
+        }
+
+        if (productionChart) {
+            productionChart.data.datasets[0].data = new Array(productionChart.data.labels.length).fill(0);
+            productionChart.data.datasets[1].data = new Array(productionChart.data.labels.length).fill(0);
+            productionChart.update();
+        }
+
+        fetchData();
+        fetchAllMachines();
+
+        console.log("Reset Actual, NG and Timeline complete");
+
+    } catch (error) {
+        console.error("Shift reset error:", error);
+    }
+}
+
 function applySimulationSettings() {
     let interval = parseInt(document.getElementById('sim-interval').value);
     if (!interval || interval < 1) interval = 1;
@@ -327,6 +398,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     fetchData();
 
     setInterval(fetchData, 2000);
+    setInterval(autoResetAtShiftChange, 30000);
 });
 
 function initChart() {
