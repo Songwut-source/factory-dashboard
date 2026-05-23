@@ -1,5 +1,18 @@
 const API_BASE = "https://factory-dashboard-ajd9.onrender.com";
 
+const machineDisplayNames = {
+    OP1: "High Pressure Load",
+    OP2: "Seat Union Press In",
+    OP3: "Piston Press",
+    OP4: "Bolt Tightening No.1",
+    OP5: "Bolt Tightening No.2",
+    OP6: "Low Leak Test",
+    OP7: "High Pressure Load",
+    OP8: "Med Leak Test No.1",
+    OP9: "Med Leak Test No.2",
+    OP10: "Pad Assembly"
+};
+
 async function loadTimelineFromDB() {
     try {
         const res = await fetch(`${API_BASE}/api/timeline`);
@@ -702,7 +715,9 @@ async function fetchAllMachines() {
             card.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 1.5rem; width: 100%;">
                     <!-- OP Name (Left) -->
-                    <div style="min-width: 80px; font-weight: 900; font-size: 1.5rem; color: var(--accent);">${m.name}</div>
+                    <div style="min-width: 220px; font-weight: 900; font-size: 1.2rem; color: var(--accent);">
+                            ${m.name} - ${machineDisplayNames[m.name] || ""}
+                        </div>
                     
                     <!-- Timeline Area (Middle) -->
                     <div style="flex: 1; display: flex; flex-direction: column; gap: 5px; justify-content: center;">
