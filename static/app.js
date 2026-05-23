@@ -396,8 +396,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadChartData();
 
     fetchData();
+    loadAlarmsFromDB();
 
     setInterval(fetchData, 2000);
+    setInterval(loadAlarmsFromDB, 2000);
     setInterval(autoResetAtShiftChange, 30000);
 });
 
@@ -939,14 +941,13 @@ const machineOPMap = {
 };
 
 // ==========================
-// Alarm System
+// Alarm System From DB
 // ==========================
 
 let selectedOP = "ALL";
 let alarmData = [];
 
 function selectOP(op) {
-
     selectedOP = op;
 
     document.querySelectorAll(".op-buttons button").forEach(btn => {
@@ -960,134 +961,82 @@ function selectOP(op) {
     loadAlarms();
 }
 
-function triggerAlarm(machineName) {
+async function loadAlarmsFromDB() {
+    try {
+        const res = await fetch(`${API_BASE}/api/alarms`);
+        alarmData = await res.json();
+        loadAlarms();
+    } catch (error) {
+        console.error("Load alarms error:", error);
+    }
+}
 
+async function triggerAlarm(machineName) {
     const opName = machineName.split(" ")[0];
 
-    changeMachineStatus(machineName, "ALARM");
+    await fetch(`${API_BASE}/api/alarms`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            op_name: opName,
+            station_name: machineName,
+            message: "Machine Alarm"
+        })
+    });
 
-    const now = new Date();
-
-    const newAlarm = {
-        op_name: opName,
-        station_name: machineName,
-        message: "Machine Alarm",
-        count: 1,
-
-        occured_time_raw: now,
-        cleared_time_raw: null,
-        start_time_raw: null,
-
-        occured_time: formatDateTime(now),
-        cleared_time: "",
-        start_time: "",
-        reset_time: "",
-        recovery_time: ""
-    };
-
-    alarmData.unshift(newAlarm);
-
-    console.log("Alarm Added:", newAlarm);
-
-    loadAlarms();
+    await changeMachineStatus(machineName, "ALARM");
+    await loadAlarmsFromDB();
 }
 
-function resetAlarm(machineName) {
+async function resetAlarm(machineName) {
+    await fetch(`${API_BASE}/api/alarms/${encodeURIComponent(machineName)}/reset`, {
+        method: "POST"
+    });
 
-    const now = new Date();
-
-    const alarm = alarmData.find(row =>
-        row.station_name === machineName &&
-        row.cleared_time === ""
-    );
-
-    if (!alarm) {
-        alert("No active alarm for " + machineName);
-        return;
-    }
-
-    alarm.cleared_time_raw = now;
-    alarm.cleared_time = formatDateTime(now);
-    alarm.reset_time = diffTime(alarm.occured_time_raw, now);
-
-    changeMachineStatus(machineName, "STOP");
-
-    console.log("Alarm Reset:", alarm);
-
-    loadAlarms();
+    await changeMachineStatus(machineName, "STOP");
+    await loadAlarmsFromDB();
 }
 
-function runMachine(machineName) {
+async function runMachine(machineName) {
+    await fetch(`${API_BASE}/api/alarms/${encodeURIComponent(machineName)}/run`, {
+        method: "POST"
+    });
 
-    const now = new Date();
-
-    const alarm = alarmData.find(row =>
-        row.station_name === machineName &&
-        row.start_time === ""
-    );
-
-    if (alarm) {
-        alarm.start_time_raw = now;
-        alarm.start_time = formatDateTime(now);
-        alarm.recovery_time = diffTime(alarm.occured_time_raw, now);
-    }
-
-    changeMachineStatus(machineName, "RUN");
-
-    console.log("Machine Run:", machineName);
-
-    loadAlarms();
+    await changeMachineStatus(machineName, "RUN");
+    await loadAlarmsFromDB();
 }
 
 function loadAlarms() {
-
     const tbody = document.getElementById("alarmTableBody");
-
     if (!tbody) return;
 
     let filteredData = alarmData;
 
     if (selectedOP !== "ALL") {
-        filteredData = alarmData.filter(
-            row => row.op_name === selectedOP
-        );
+        filteredData = alarmData.filter(row => row.op_name === selectedOP);
     }
 
     tbody.innerHTML = "";
 
     filteredData.forEach(row => {
-
         tbody.innerHTML += `
             <tr>
-                <td>${row.station_name}</td>
-                <td>${row.message}</td>
-                <td>${row.count}</td>
-                <td>${row.occured_time}</td>
-                <td>${row.cleared_time}</td>
-                <td>${row.start_time}</td>
-                <td>${row.reset_time}</td>
-                <td>${row.recovery_time}</td>
+                <td>${row.station_name || ""}</td>
+                <td>${row.message || ""}</td>
+                <td>${row.count || ""}</td>
+                <td>${formatAlarmTime(row.occured_time)}</td>
+                <td>${formatAlarmTime(row.cleared_time)}</td>
+                <td>${formatAlarmTime(row.start_time)}</td>
+                <td>${row.reset_time || ""}</td>
+                <td>${row.recovery_time || ""}</td>
             </tr>
         `;
     });
 }
 
-function diffTime(start, end) {
-    const diffMs = end - start;
-
-    const totalSeconds = Math.floor(diffMs / 1000);
-
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    return [
-        String(hours).padStart(2, "0"),
-        String(minutes).padStart(2, "0"),
-        String(seconds).padStart(2, "0")
-    ].join(":");
-}
-
-function formatDateTime(date) {
-    return date.toLocaleString();
+function formatAlarmTime(value) {
+    if (!value) return "";
+    return new Date(value).toLocaleString();
 }

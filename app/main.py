@@ -249,3 +249,70 @@ def clear_timeline(db: Session = Depends(database.get_db)):
     db.query(models.TimelineHistory).delete()
     db.commit()
     return {"message": "timeline cleared"}
+
+from pydantic import BaseModel
+from typing import Optional
+
+class AlarmCreate(BaseModel):
+    op_name: str
+    station_name: str
+    message: str = "Machine Alarm"
+
+
+def format_duration(start, end):
+    diff = end - start
+    total_seconds = int(diff.total_seconds())
+
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
+
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+
+@app.get("/api/alarms")
+def get_alarms(db: Session = Depends(database.get_db)):
+    alarms = db.query(models.AlarmHistory).order_by(models.AlarmHistory.id.desc()).all()
+    return alarms
+
+
+@app.post("/api/alarms")
+def create_alarm(data: AlarmCreate, db: Session = Depends(database.get_db)):
+    alarm = models.AlarmHistory(
+        op_name=data.op_name,
+        station_name=data.station_name,
+        message=data.message,
+        count=1,
+        occured_time=datetime.now()
+    )
+
+    db.add(alarm)
+    db.commit()
+    db.refresh(alarm)
+
+    return alarm
+
+
+@app.post("/api/alarms/{machine_name}/reset")
+def reset_alarm(machine_name: str, db: Session = Depends(database.get_db)):
+    alarm = db.query(models.AlarmHistory)
+
+@app.post("/api/alarms/{machine_name}/run")
+def run_alarm(machine_name: str, db: Session = Depends(database.get_db)):
+    alarm = db.query(models.AlarmHistory).filter(
+        models.AlarmHistory.station_name == machine_name,
+        models.AlarmHistory.start_time == None
+    ).order_by(models.AlarmHistory.id.desc()).first()
+
+    if not alarm:
+        return {"message": "No alarm waiting for run"}
+
+    now = datetime.now()
+
+    alarm.start_time = now
+    alarm.recovery_time = format_duration(alarm.occured_time, now)
+
+    db.commit()
+    db.refresh(alarm)
+
+    return alarm
