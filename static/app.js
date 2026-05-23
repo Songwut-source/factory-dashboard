@@ -739,7 +739,7 @@ async function fetchAllMachines() {
                                 <button class="mini-btn mini-run" onclick="changeMachineStatus('${m.name}','RUN')">RUN</button>
                                 <button class="mini-btn mini-standby" onclick="changeMachineStatus('${m.name}','STANDBY')">STANDBY</button>
                                 <button class="mini-btn mini-stop" onclick="changeMachineStatus('${m.name}','STOP')">STOP</button>
-                                <button class="mini-btn mini-alarm"onclick="triggerAlarm('${m.name}')">ALARM</button>
+                                <button class="mini-btn mini-alarm"onclick="triggerAlarm('${m.op}', '${m.name}')">ALARM</button>
                             </div>
                         </div>
                     </div>
