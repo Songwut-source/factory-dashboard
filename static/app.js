@@ -770,7 +770,7 @@ machines.sort((a, b) => {
                     </div>
 
                     <!-- Status (Right) with controls -->
-                    <div style="min-width: 180px; display: flex; align-items: center; gap: 0.8rem; justify-content: flex-end; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 1rem;">
+                    <div style="min-width: 180px; display: flex;align-items: center;gap: 1.5rem;position: relative;left: -40px; justify-content: flex-end; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 1rem;">
                         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <span class="pulse-dot ${pulseClass}" style="background-color: ${colorVar}; width: 12px; height: 12px;"></span>
