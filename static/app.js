@@ -626,12 +626,12 @@ async function fetchAllMachines() {
         let machines = await res.json();
         
         // Filter out AS001 (Line overview) and sort OP machines correctly
-        machines = machines.filter(m => m.name !== 'AS001');
-        machines.sort((a, b) => {
-            const numA = parseInt(a.name.replace('OP', '')) || 0;
-            const numB = parseInt(b.name.replace('OP', '')) || 0;
-            return numA - numB;
-        });
+            machines = machines.filter(m =>
+            m.name !== 'AS001' &&
+            m.name !== 'OP3' &&
+            m.name !== 'OP4' &&
+            m.name !== 'OP6'
+        );
         
         const grid = document.getElementById('machines-grid');
         if (!grid) return;
@@ -727,17 +727,17 @@ async function fetchAllMachines() {
                         </div>
                         
                         <!-- Day Scale with Label -->
-                        <div style="display: flex; align-items: center; gap: 8px;padding-left: 10px;
-                            <div style="min-width: 60px; font-size: 0.55rem; font-weight: 900; color: ${currentShift === 'day' ? 'var(--accent)' : 'var(--text-secondary)'}; text-align: right;">DAY</div>
-                            <div style="flex: 1; position: relative; height: 14px; font-size: 0.6rem; color: ${currentShift === 'day' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight: 700;">
+                        <div style="display: flex; align-items: center; gap: 8px; padding-left: 10px;">
+                            <div style="width: 45px; font-size: 0.55rem; font-weight: 900; color: ${currentShift === 'day' ? 'var(--accent)' : 'var(--text-secondary)'}; text-align: right;">DAY</div>
+                            <div style="flex: 1; position: relative; padding-left: 5px; height: 14px; font-size: 0.6rem; color: ${currentShift === 'day' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight: 700;">
                                 ${renderTimeScale('day')}
                             </div>
                         </div>
 
                         <!-- Night Scale with Label -->
-                        <div style="display: flex; align-items: center; gap: 8px;padding-left: 10px;
-                            <div style="min-width: 60px; font-size: 0.55rem; font-weight: 900; color: ${currentShift === 'night' ? 'var(--accent)' : 'var(--text-secondary)'}; text-align: right;">NIGHT</div>
-                            <div style="flex: 1; position: relative; height: 14px; font-size: 0.6rem; color: ${currentShift === 'night' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight: 700;">
+                        <div style="display: flex; align-items: center; gap: 8px; padding-left: 10px;">
+                            <div style="width: 45px; font-size: 0.55rem; font-weight: 900; color: ${currentShift === 'night' ? 'var(--accent)' : 'var(--text-secondary)'}; text-align: right;">NIGHT</div>
+                            <div style="flex: 1; position: relative; padding-left: 5px; height: 14px; font-size: 0.6rem; color: ${currentShift === 'night' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight: 700;">
                                 ${renderTimeScale('night')}
                             </div>
                         </div>
