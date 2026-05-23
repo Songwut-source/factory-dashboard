@@ -14,39 +14,13 @@ function selectOP(op) {
 }
 
 function loadAlarms() {
-  const fromDate = document.getElementById("fromDate").value;
-  const toDate = document.getElementById("toDate").value;
   const tbody = document.getElementById("alarmTableBody");
-
-  const alarmData = [
-    {
-      op_name: "OP1",
-      station_name: "High Pressure Load",
-      message: "001 : AREA SENSOR FAULT",
-      count: 4,
-      occured_time: "5/22/2026 2:48 PM",
-      cleared_time: "5/22/2026 2:48 PM",
-      start_time: "5/22/2026 2:49 PM",
-      reset_time: "00:00:15",
-      recovery_time: "00:00:24"
-    },
-    {
-      op_name: "OP2",
-      station_name: "Med Leak Test 01",
-      message: "304 : PLUG BLEEDER LH",
-      count: 18,
-      occured_time: "5/22/2026 2:38 PM",
-      cleared_time: "5/22/2026 2:38 PM",
-      start_time: "5/22/2026 2:38 PM",
-      reset_time: "00:00:03",
-      recovery_time: "00:00:15"
-    }
-  ];
+  if (!tbody) return;
 
   let filteredData = alarmData;
 
   if (selectedOP !== "ALL") {
-    filteredData = filteredData.filter(row => row.op_name === selectedOP);
+    filteredData = alarmData.filter(row => row.op_name === selectedOP);
   }
 
   tbody.innerHTML = "";
@@ -66,6 +40,8 @@ function loadAlarms() {
     `;
   });
 }
+
+let alarmData = [];
 
 document.addEventListener("DOMContentLoaded", loadAlarms);
 </script>
