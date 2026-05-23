@@ -121,11 +121,11 @@ def export_report(db: Session = Depends(database.get_db)):
 @app.get("/api/machines")
 def get_all_machines(db: Session = Depends(database.get_db)):
     machines = db.query(models.Machine).all()
-    if len(machines) < 10:
+    if len(machines) < 13:
         existing_names = [m.name for m in machines]
         import random
         statuses = ["RUN", "STANDBY", "STOP"]
-        for i in range(1, 11):
+        for i in [1, 2, 5, 7, 8, 9, 10, 11, 12, 13]:
             name = f"OP{i}"
             if name not in existing_names:
                 new_machine = models.Machine(
