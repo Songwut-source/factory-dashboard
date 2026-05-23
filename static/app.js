@@ -1,16 +1,16 @@
 const API_BASE = "https://factory-dashboard-ajd9.onrender.com";
 
 const machineDisplayNames = {
-    OP1: "High Pressure Load",
+    OP1: "Plug Bleeder Tightening & Mark Lot No.",
     OP2: "Seat Union Press In",
-    OP3: "Piston Press",
-    OP4: "Bolt Tightening No.1",
-    OP5: "Bolt Tightening No.2",
-    OP6: "Low Leak Test",
-    OP7: "High Pressure Load",
-    OP8: "Med Leak Test No.1",
-    OP9: "Med Leak Test No.2",
-    OP10: "Pad Assembly"
+    OP5: "Piston Press In & Thorugh Hole Check",
+    OP7: "Bolt Tightening No.1",
+    OP8: "Bolt Tightening No.2",
+    OP9: "Low Leak Test",
+    OP10: "High Pressure Load",
+    OP11: "Med Leak Test No.1",
+    OP12: "Med Leak Test No.2",
+    OP13: "Pad Assembly"
 };
 
 async function loadTimelineFromDB() {
@@ -727,7 +727,7 @@ async function fetchAllMachines() {
                         </div>
                         
                         <!-- Day Scale with Label -->
-                        <div style="display: flex; align-items: center; gap: 20px;">
+                        <div style="display: flex; align-items: center; gap: 8px;padding-left: 10px;
                             <div style="min-width: 60px; font-size: 0.55rem; font-weight: 900; color: ${currentShift === 'day' ? 'var(--accent)' : 'var(--text-secondary)'}; text-align: right;">DAY</div>
                             <div style="flex: 1; position: relative; height: 14px; font-size: 0.6rem; color: ${currentShift === 'day' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight: 700;">
                                 ${renderTimeScale('day')}
@@ -735,7 +735,7 @@ async function fetchAllMachines() {
                         </div>
 
                         <!-- Night Scale with Label -->
-                        <div style="display: flex; align-items: center; gap: 20px;">
+                        <div style="display: flex; align-items: center; gap: 8px;padding-left: 10px;
                             <div style="min-width: 60px; font-size: 0.55rem; font-weight: 900; color: ${currentShift === 'night' ? 'var(--accent)' : 'var(--text-secondary)'}; text-align: right;">NIGHT</div>
                             <div style="flex: 1; position: relative; height: 14px; font-size: 0.6rem; color: ${currentShift === 'night' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight: 700;">
                                 ${renderTimeScale('night')}
