@@ -632,6 +632,23 @@ async function fetchAllMachines() {
             m.name !== 'OP4' &&
             m.name !== 'OP6'
         );
+
+        const opOrder = [
+            "OP1",
+            "OP2",
+            "OP5",
+            "OP7",
+            "OP8",
+            "OP9",
+            "OP10",
+            "OP11",
+            "OP12",
+            "OP13"
+        ];
+
+machines.sort((a, b) => {
+    return opOrder.indexOf(a.name) - opOrder.indexOf(b.name);
+});
         
         const grid = document.getElementById('machines-grid');
         if (!grid) return;
@@ -722,22 +739,26 @@ async function fetchAllMachines() {
                     <!-- Timeline Area (Middle) -->
                     <div style="flex: 1; display: flex; flex-direction: column; gap: 5px; justify-content: center;">
                         <!-- The Bar -->
-                        <div style="height: 35px;display: flex;border-radius: 5px;overflow: hidden;background: rgba(0,0,0,0.3);border: 1px solid rgba(255,255,255,0.1);box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);width: 100%;">
+                        <div style="display: grid; grid-template-columns: 45px 1fr; column-gap: 8px;">
+                        <div>
+                    </div>
+                        <div style="height: 35px; display: flex; border-radius: 5px; overflow: hidden; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); width: 100%;">
                             ${renderBlocks(currentShift)}
                         </div>
+                    </div>
                         
                         <!-- Day Scale with Label -->
-                        <div style="display: flex; align-items: center; gap: 8px; padding-left: 10px;">
-                            <div style="width: 45px; font-size: 0.55rem; font-weight: 900; color: ${currentShift === 'day' ? 'var(--accent)' : 'var(--text-secondary)'}; text-align: right;">DAY</div>
-                            <div style="flex: 1; position: relative; padding-left: 5px; height: 14px; font-size: 0.6rem; color: ${currentShift === 'day' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight: 700;">
+                        <div style="display: grid; grid-template-columns: 45px 1fr; column-gap: 8px; padding-left: 0;">
+                            <div style="font-size: 0.55rem; font-weight: 900; color: ${currentShift === 'day' ? 'var(--accent)' : 'var(--text-secondary)'}; text-align: right;">DAY</div>
+                            <div style="position: relative; height: 14px; font-size: 0.6rem; color: ${currentShift === 'day' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight: 700;">
                                 ${renderTimeScale('day')}
                             </div>
                         </div>
 
                         <!-- Night Scale with Label -->
-                        <div style="display: flex; align-items: center; gap: 8px; padding-left: 10px;">
-                            <div style="width: 45px; font-size: 0.55rem; font-weight: 900; color: ${currentShift === 'night' ? 'var(--accent)' : 'var(--text-secondary)'}; text-align: right;">NIGHT</div>
-                            <div style="flex: 1; position: relative; padding-left: 5px; height: 14px; font-size: 0.6rem; color: ${currentShift === 'night' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight: 700;">
+                        <div style="display: grid; grid-template-columns: 45px 1fr; column-gap: 8px; padding-left: 0;">
+                            <div style="font-size: 0.55rem; font-weight: 900; color: ${currentShift === 'night' ? 'var(--accent)' : 'var(--text-secondary)'}; text-align: right;">NIGHT</div>
+                            <div style="position: relative; height: 14px; font-size: 0.6rem; color: ${currentShift === 'night' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight: 700;">
                                 ${renderTimeScale('night')}
                             </div>
                         </div>
