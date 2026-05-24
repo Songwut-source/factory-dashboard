@@ -273,7 +273,10 @@ function getCurrentShiftInfo() {
         }
     }
     
-    const index = Math.floor(secondsIntoShift / 120); // 1 block = 2 minutes -> 360 blocks per 12h
+    let index = Math.floor(secondsIntoShift / 120);
+
+    if (index < 0) index = 0;
+    if (index >= SHIFT_BLOCKS) index = SHIFT_BLOCKS - 1;
     return { shift, index, elapsedSeconds: secondsIntoShift };
 }
 
@@ -289,8 +292,8 @@ async function autoResetAtShiftChange() {
     if (lastAutoResetKey === resetKey) return;
 
     if (
-        (hour === 8 && minute === 20) ||
-        (hour === 20 && minute === 20)
+        (hour === 8 && minute >= 20 && minute <= 21) ||
+        (hour === 20 && minute >= 20 && minute <= 21)
     ) {
         console.log("Auto Reset Shift:", resetKey);
 
@@ -317,8 +320,18 @@ async function resetShiftData() {
 
         hourlyHistory = {};
 
+        if (productionChart) {
+            productionChart.data.datasets[0].data.fill(0);
+            productionChart.data.datasets[1].data.fill(0);
+            productionChart.update();
+        }
+
         await fetch(`${API_BASE}/api/machine/AS001/update?status=RUN&good_qty=0&ng_qty=0`, {
             method: "POST"
+        });
+
+        await fetch(`${API_BASE}/api/timeline`, {
+        method: "DELETE"
         });
 
         const res = await fetch(`${API_BASE}/api/machines`);
@@ -751,8 +764,17 @@ machines.sort((a, b) => {
                     night: new Array(SHIFT_BLOCKS).fill(null) 
                 };
             }
-            shiftHistory[m.name][currentShift][currentIndex] = m.status;
-            saveTimelineToDB(m.name, currentShift, currentIndex, m.status);
+            if (currentIndex >= 0 && currentIndex < SHIFT_BLOCKS) {
+
+                shiftHistory[m.name][currentShift][currentIndex] = m.status;
+
+                saveTimelineToDB(
+                    m.name,
+                    currentShift,
+                    currentIndex,
+                    m.status
+                );
+            }
 
             saveShiftHistory();
 
