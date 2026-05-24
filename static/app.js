@@ -455,6 +455,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initChart();
 
+    productionChart.data.labels = getShiftChartLabels();
+    productionChart.data.datasets[0].data = new Array(productionChart.data.labels.length).fill(0);
+    productionChart.data.datasets[1].data = new Array(productionChart.data.labels.length).fill(0);
+    productionChart.update();
+
     await loadChartDataFromDB();
     await loadHourlyHistoryFromDB();
 
@@ -678,6 +683,30 @@ function switchView(viewId, element) {
     document.querySelector('.page-title').innerText = titleMap[viewId] || 'AS001 Overview';
 }
 
+function getShiftChartLabels() {
+    const { shift } = getCurrentShiftInfo();
+    const labels = [];
+
+    if (shift === 'day') {
+        labels.push('08:20');
+        for (let h = 9; h <= 20; h++) {
+            labels.push(h.toString().padStart(2, '0') + ':00');
+        }
+        labels.push('20:20');
+    } else {
+        labels.push('20:20');
+        for (let h = 21; h <= 23; h++) {
+            labels.push(h.toString().padStart(2, '0') + ':00');
+        }
+        for (let h = 0; h <= 8; h++) {
+            labels.push(h.toString().padStart(2, '0') + ':00');
+        }
+        labels.push('08:20');
+    }
+
+    return labels;
+}
+
 function updateProductionChart(machine) {
     if (!productionChart) return;
     if (!chartReady) return;
@@ -687,7 +716,7 @@ function updateProductionChart(machine) {
     const currentHour = now.getHours();
     
     // Generate labels based on shift (08:20, 09:00, ..., 20:20)
-    const labels = [];
+    const labels = getShiftChartLabels();
     if (shift === 'day') {
         labels.push('08:20');
         for (let h = 9; h <= 20; h++) labels.push(h.toString().padStart(2, '0') + ':00');
@@ -702,10 +731,7 @@ function updateProductionChart(machine) {
     // Update Chart Labels if changed
     if (JSON.stringify(productionChart.data.labels) !== JSON.stringify(labels)) {
         productionChart.data.labels = labels;
-        // Reset data for new shift
-        productionChart.data.datasets[0].data = new Array(labels.length).fill(0);
-        productionChart.data.datasets[1].data = new Array(labels.length).fill(0);
-        hourlyHistory = {}; 
+        productionChart.update();
     }
 
     // Track production in current hour slot
