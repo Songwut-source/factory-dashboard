@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 import os
 import pandas as pd
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 
 from . import models, database
 
@@ -28,7 +28,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 def thai_now():
-    return datetime.now(timezone(timedelta(hours=7)))
+    return datetime.utcnow() + timedelta(hours=7)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -110,7 +110,7 @@ def export_report(db: Session = Depends(database.get_db)):
         "Good Qty": [machine.current_good_count],
         "NG Qty": [machine.current_ng_count],
         "Total Qty": [total],
-        "Export Date": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+        "Export Date": [thai_now().strftime("%Y-%m-%d %H:%M:%S")]
     }
     df = pd.DataFrame(data)
     
@@ -119,7 +119,7 @@ def export_report(db: Session = Depends(database.get_db)):
     
     return FileResponse(
         path=file_path, 
-        filename=f"AS001_Report_{datetime.now().strftime('%Y%m%d')}.xlsx", 
+        filename=f"AS001_Report_{thai_now().strftime('%Y%m%d')}.xlsx", 
         media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
 
@@ -288,7 +288,7 @@ def create_alarm(data: AlarmCreate, db: Session = Depends(database.get_db)):
         station_name=data.station_name,
         message=data.message,
         count=1,
-        occured_time=datetime.now()
+        occured_time=thai_now()
     )
 
     db.add(alarm)
@@ -309,7 +309,7 @@ def reset_alarm(machine_name: str, db: Session = Depends(database.get_db)):
     if not alarm:
         return {"message": "No active alarm"}
 
-    now = datetime.now()
+    now = thai_now()
 
     alarm.cleared_time = now
 
@@ -334,7 +334,7 @@ def run_alarm(machine_name: str, db: Session = Depends(database.get_db)):
     if not alarm:
         return {"message": "No alarm waiting for run"}
 
-    now = datetime.now()
+    now = thai_now()
 
     alarm.start_time = now
     alarm.recovery_time = format_duration(alarm.occured_time, now)
