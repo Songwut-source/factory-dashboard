@@ -1,3 +1,7 @@
+from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, ForeignKey
+from sqlalchemy.sql import func
+from .database import Base
+
 class AlarmHistory(Base):
     __tablename__ = "alarm_history"
 
@@ -13,10 +17,6 @@ class AlarmHistory(Base):
 
     reset_time = Column(String, default="")
     recovery_time = Column(String, default="")
-    
-from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, ForeignKey
-from sqlalchemy.sql import func
-from .database import Base
 
 class Machine(Base):
     __tablename__ = "machines"
