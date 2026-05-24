@@ -5,12 +5,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 import os
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from . import models, database
 
 # Create tables
 models.Base.metadata.create_all(bind=database.engine)
+
+
 
 app = FastAPI(title="Smart Production Line API (AS001)")
 
@@ -24,6 +26,9 @@ app.add_middleware(
 
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+
+def thai_now():
+    return datetime.now(timezone(timedelta(hours=7)))
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
