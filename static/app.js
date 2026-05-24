@@ -448,15 +448,16 @@ function applySimulationSettings() {
 document.addEventListener('DOMContentLoaded', async () => {
 
     loadShiftHistory();
-    await loadHourlyHistoryFromDB();
 
     await loadSettings();
     await loadTimelineFromDB();
+    await loadHourlyHistoryFromDB();
 
     initChart();
-    await loadChartDataFromDB();
 
-    fetchData();
+    await fetchData();              // สำคัญ: ให้ updateProductionChart สร้าง labels ก่อน
+    await loadChartDataFromDB();    // แล้วค่อยโหลดกราฟจาก DB
+
     loadAlarmsFromDB();
 
     setInterval(fetchData, 2000);
@@ -512,18 +513,17 @@ function initChart() {
 
 async function fetchData() {
     try {
-        // Fetch machine status
         const statusRes = await fetch(`${API_BASE}/api/machine/AS001`);
         const machine = await statusRes.json();
-        
-        // Fetch OEE
+
         const oeeRes = await fetch(`${API_BASE}/api/machine/AS001/oee`);
-        
-        // Fetch All Machines
-        fetchAllMachines();
+
+        await fetchAllMachines();
+
         const oeeData = await oeeRes.json();
-        
+
         updateUI(machine, oeeData);
+
     } catch (err) {
         console.error("Error fetching data:", err);
     }
