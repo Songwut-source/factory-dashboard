@@ -79,25 +79,65 @@ let lastOkActivitySeconds = 0;
 
 // Production Tracking for Dashboard Chart
 let hourlyHistory = {}; // Persistent hourly totals
-function saveHourlyHistory() {
-    localStorage.setItem('hourlyHistory', JSON.stringify(hourlyHistory));
+async function saveHourlyHistoryToDB(shift, slotKey, startGood, startNG) {
+    await fetch(`${API_BASE}/api/hourly`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            shift: shift,
+            slotKey: slotKey,
+            startGood: startGood,
+            startNG: startNG
+        })
+    });
 }
 
-function loadHourlyHistory() {
-    const saved = localStorage.getItem('hourlyHistory');
-    if (saved) {
-        hourlyHistory = JSON.parse(saved);
+async function loadHourlyHistoryFromDB() {
+    try {
+        const res = await fetch(`${API_BASE}/api/hourly`);
+        hourlyHistory = await res.json();
+    } catch (error) {
+        console.error("Load hourly history error:", error);
+        hourlyHistory = {};
     }
 }
 
-function saveChartData() {
+async function saveChartDataToDB(shift, label, good, ng) {
+    await fetch(`${API_BASE}/api/chart`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            shift: shift,
+            label: label,
+            good: good,
+            ng: ng
+        })
+    });
+}
+
+async function loadChartDataFromDB() {
     if (!productionChart) return;
 
-    localStorage.setItem('productionChartData', JSON.stringify({
-        labels: productionChart.data.labels,
-        good: productionChart.data.datasets[0].data,
-        ng: productionChart.data.datasets[1].data
-    }));
+    try {
+        const { shift } = getCurrentShiftInfo();
+        const res = await fetch(`${API_BASE}/api/chart`);
+        const data = await res.json();
+
+        const shiftData = data[shift] || {};
+
+        productionChart.data.labels.forEach((label, index) => {
+            productionChart.data.datasets[0].data[index] = shiftData[label]?.good || 0;
+            productionChart.data.datasets[1].data[index] = shiftData[label]?.ng || 0;
+        });
+
+        productionChart.update();
+    } catch (error) {
+        console.error("Load chart data error:", error);
+    }
 }
 
 function loadChartData() {
@@ -318,6 +358,14 @@ async function resetShiftData() {
         localStorage.removeItem("hourlyHistory");
         localStorage.removeItem("productionChartData");
 
+        await fetch(`${API_BASE}/api/hourly`, {
+            method: "DELETE"
+        });
+
+        await fetch(`${API_BASE}/api/chart`, {
+            method: "DELETE"
+        });
+
         hourlyHistory = {};
 
         if (productionChart) {
@@ -400,13 +448,13 @@ function applySimulationSettings() {
 document.addEventListener('DOMContentLoaded', async () => {
 
     loadShiftHistory();
-    loadHourlyHistory();
+    await loadHourlyHistoryFromDB();
 
     await loadSettings();
     await loadTimelineFromDB();
 
     initChart();
-    loadChartData();
+    await loadChartDataFromDB();
 
     fetchData();
     loadAlarmsFromDB();
@@ -691,8 +739,19 @@ function updateProductionChart(machine) {
         productionChart.data.datasets[1].data[slotIndex] = ngInHour;
         productionChart.update();
 
-        saveHourlyHistory();
-        saveChartData();
+        saveHourlyHistoryToDB(
+            shift,
+            slotKey,
+            hourlyHistory[slotKey].startGood,
+            hourlyHistory[slotKey].startNG
+        );
+
+        saveChartDataToDB(
+            shift,
+            labels[slotIndex],
+            goodInHour,
+            ngInHour
+        );
 
         // Update Hourly Totals Row
         const totalsRow = document.getElementById('hourly-totals-row');
