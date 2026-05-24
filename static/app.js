@@ -659,8 +659,20 @@ function updateProductionChart(machine) {
             hourlyHistory[slotKey] = { startGood: machine.current_good_count, startNG: machine.current_ng_count };
         }
         
-        const goodInHour = machine.current_good_count - hourlyHistory[slotKey].startGood;
-        const ngInHour = machine.current_ng_count - hourlyHistory[slotKey].startNG;
+        let goodInHour = machine.current_good_count - hourlyHistory[slotKey].startGood;
+        let ngInHour = machine.current_ng_count - hourlyHistory[slotKey].startNG;
+
+        // ป้องกันค่าติดลบกรณี reset counter หรือ refresh
+        if (machine.current_good_count < hourlyHistory[slotKey].startGood) {
+            goodInHour = machine.current_good_count;
+        }
+
+        if (machine.current_ng_count < hourlyHistory[slotKey].startNG) {
+            ngInHour = machine.current_ng_count;
+        }
+
+        goodInHour = Math.max(0, goodInHour);
+        ngInHour = Math.max(0, ngInHour);
         
         productionChart.data.datasets[0].data[slotIndex] = goodInHour;
         productionChart.data.datasets[1].data[slotIndex] = ngInHour;
