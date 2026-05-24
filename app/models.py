@@ -1,3 +1,19 @@
+class AlarmHistory(Base):
+    __tablename__ = "alarm_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    op_name = Column(String, index=True)
+    station_name = Column(String, index=True)
+    message = Column(String)
+    count = Column(Integer, default=1)
+
+    occured_time = Column(DateTime)
+    cleared_time = Column(DateTime, nullable=True)
+    start_time = Column(DateTime, nullable=True)
+
+    reset_time = Column(String, default="")
+    recovery_time = Column(String, default="")
+    
 from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, ForeignKey
 from sqlalchemy.sql import func
 from .database import Base
