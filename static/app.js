@@ -78,6 +78,7 @@ let lastOkCount = 0;
 let lastOkActivitySeconds = 0;
 
 // Production Tracking for Dashboard Chart
+let chartReady = false;
 let hourlyHistory = {}; // Persistent hourly totals
 async function saveHourlyHistoryToDB(shift, slotKey, startGood, startNG) {
     await fetch(`${API_BASE}/api/hourly`, {
@@ -457,6 +458,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadChartDataFromDB();
     await loadHourlyHistoryFromDB();
 
+    chartReady = true;
+
     await fetchData();
 
     loadAlarmsFromDB();
@@ -677,6 +680,7 @@ function switchView(viewId, element) {
 
 function updateProductionChart(machine) {
     if (!productionChart) return;
+    if (!chartReady) return;
 
     const { shift } = getCurrentShiftInfo();
     const now = virtualTime || new Date();
@@ -753,19 +757,23 @@ function updateProductionChart(machine) {
         productionChart.data.datasets[1].data[slotIndex] = ngInHour;
         productionChart.update();
 
-        saveHourlyHistoryToDB(
-            shift,
-            slotKey,
-            hourlyHistory[slotKey].startGood,
-            hourlyHistory[slotKey].startNG
-        );
+        if (chartReady) {
+            saveHourlyHistoryToDB(
+                shift,
+                slotKey,
+                hourlyHistory[slotKey].startGood,
+                hourlyHistory[slotKey].startNG
+            );
+        }
 
-        saveChartDataToDB(
-            shift,
-            labels[slotIndex],
-            goodInHour,
-            ngInHour
-        );
+        if (chartReady && (goodInHour > 0 || ngInHour > 0)) {
+            saveChartDataToDB(
+                shift,
+                labels[slotIndex],
+                goodInHour,
+                ngInHour
+            );
+        }
 
         // Update Hourly Totals Row
         const totalsRow = document.getElementById('hourly-totals-row');
