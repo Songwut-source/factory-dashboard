@@ -451,12 +451,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await loadSettings();
     await loadTimelineFromDB();
-    await loadHourlyHistoryFromDB();
 
     initChart();
 
-    await fetchData();              // สำคัญ: ให้ updateProductionChart สร้าง labels ก่อน
-    await loadChartDataFromDB();    // แล้วค่อยโหลดกราฟจาก DB
+    await loadChartDataFromDB();
+    await loadHourlyHistoryFromDB();
+
+    await fetchData();
 
     loadAlarmsFromDB();
 
@@ -717,7 +718,20 @@ function updateProductionChart(machine) {
 
     if (slotIndex !== -1) {
         if (!hourlyHistory[slotKey]) {
-            hourlyHistory[slotKey] = { startGood: machine.current_good_count, startNG: machine.current_ng_count };
+            const oldGood = productionChart.data.datasets[0].data[slotIndex] || 0;
+            const oldNG = productionChart.data.datasets[1].data[slotIndex] || 0;
+
+            hourlyHistory[slotKey] = {
+                startGood: Math.max(0, machine.current_good_count - oldGood),
+                startNG: Math.max(0, machine.current_ng_count - oldNG)
+            };
+
+            saveChartDataToDB(
+                shift,
+                labels[slotIndex],
+                goodInHour,
+                ngInHour
+            );
         }
         
         let goodInHour = machine.current_good_count - hourlyHistory[slotKey].startGood;
