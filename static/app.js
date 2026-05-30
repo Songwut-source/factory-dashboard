@@ -321,26 +321,35 @@ function getCurrentShiftInfo() {
     return { shift, index, elapsedSeconds: secondsIntoShift };
 }
 
-let lastAutoResetKey = "";
+function getCurrentShiftKey() {
+    const now = virtualTime || new Date();
+    const { shift } = getCurrentShiftInfo();
+
+    const keyDate = new Date(now);
+    // Night shift before 08:20 belongs to the previous day's night shift
+    if (shift === "night" && (now.getHours() < 8 || (now.getHours() === 8 && now.getMinutes() < 20))) {
+        keyDate.setDate(keyDate.getDate() - 1);
+    }
+
+    const y = keyDate.getFullYear();
+    const m = String(keyDate.getMonth() + 1).padStart(2, "0");
+    const d = String(keyDate.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}-${shift}`;
+}
 
 async function autoResetAtShiftChange() {
-    const now = virtualTime || new Date();
-    const hour = now.getHours();
-    const minute = now.getMinutes();
+    const currentShiftKey = getCurrentShiftKey();
+    const savedShiftKey = localStorage.getItem("lastShiftKey");
 
-    const resetKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${hour}-${minute}`;
+    if (!savedShiftKey) {
+        localStorage.setItem("lastShiftKey", currentShiftKey);
+        return;
+    }
 
-    if (lastAutoResetKey === resetKey) return;
-
-    if (
-        (hour === 8 && minute >= 20 && minute <= 21) ||
-        (hour === 20 && minute >= 20 && minute <= 21)
-    ) {
-        console.log("Auto Reset Shift:", resetKey);
-
-        lastAutoResetKey = resetKey;
-
+    if (savedShiftKey !== currentShiftKey) {
+        console.log("Auto Reset Shift:", savedShiftKey, "=>", currentShiftKey);
         await resetShiftData();
+        localStorage.setItem("lastShiftKey", currentShiftKey);
     }
 }
 
@@ -465,6 +474,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     chartReady = true;
 
+    await autoResetAtShiftChange();
     await fetchData();
 
     loadAlarmsFromDB();
@@ -717,16 +727,6 @@ function updateProductionChart(machine) {
     
     // Generate labels based on shift (08:20, 09:00, ..., 20:20)
     const labels = getShiftChartLabels();
-    if (shift === 'day') {
-        labels.push('08:20');
-        for (let h = 9; h <= 20; h++) labels.push(h.toString().padStart(2, '0') + ':00');
-        labels.push('20:20');
-    } else {
-        labels.push('20:20');
-        for (let h = 21; h <= 23; h++) labels.push(h.toString().padStart(2, '0') + ':00');
-        for (let h = 0; h <= 8; h++) labels.push(h.toString().padStart(2, '0') + ':00');
-        labels.push('08:20');
-    }
 
     // Update Chart Labels if changed
     if (JSON.stringify(productionChart.data.labels) !== JSON.stringify(labels)) {
@@ -735,9 +735,10 @@ function updateProductionChart(machine) {
     }
 
     // Track production in current hour slot
-    const slotKey = currentHour.toString().padStart(2, '0') + ':00';
+    const slotKey = `${shift}-${currentHour.toString().padStart(2, '0')}:00`;
     // Map currentHour to label index
-    let slotIndex = labels.indexOf(slotKey);
+    const labelKey = currentHour.toString().padStart(2, '0') + ':00';
+    let slotIndex = labels.indexOf(labelKey);
     // Handle the special :20 slots
     if (slotIndex === -1) {
         if (shift === 'day' && currentHour === 8) slotIndex = 0;
@@ -756,12 +757,6 @@ function updateProductionChart(machine) {
                 startNG: Math.max(0, machine.current_ng_count - oldNG)
             };
 
-            saveChartDataToDB(
-                shift,
-                labels[slotIndex],
-                goodInHour,
-                ngInHour
-            );
         }
         
         let goodInHour = machine.current_good_count - hourlyHistory[slotKey].startGood;
@@ -793,12 +788,6 @@ function updateProductionChart(machine) {
         }
 
         if (chartReady && (goodInHour > 0 || ngInHour > 0)) {
-            saveChartDataToDB(
-                shift,
-                labels[slotIndex],
-                goodInHour,
-                ngInHour
-            );
         }
 
         // Update Hourly Totals Row

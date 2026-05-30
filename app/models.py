@@ -74,6 +74,19 @@ class ChartHistory(Base):
     __tablename__ = "chart_history"
 
     id = Column(Integer, primary_key=True, index=True)
-    slot_label = Column(String, index=True)
+    shift = Column(String, index=True)
+    label = Column(String, index=True)
     good_qty = Column(Integer, default=0)
     ng_qty = Column(Integer, default=0)
+    updated_at = Column(DateTime)
+
+
+class HourlyHistory(Base):
+    __tablename__ = "hourly_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    shift = Column(String, index=True)
+    slot_key = Column(String, index=True)
+    start_good = Column(Integer, default=0)
+    start_ng = Column(Integer, default=0)
+    updated_at = Column(DateTime)

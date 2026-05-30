@@ -343,3 +343,111 @@ def run_alarm(machine_name: str, db: Session = Depends(database.get_db)):
     db.refresh(alarm)
 
     return alarm
+
+@app.get("/api/chart")
+def get_chart_history(db: Session = Depends(database.get_db)):
+    rows = db.query(models.ChartHistory).all()
+
+    result = {}
+
+    for r in rows:
+        if r.shift not in result:
+            result[r.shift] = {}
+
+        result[r.shift][r.label] = {
+            "good": r.good_qty,
+            "ng": r.ng_qty
+        }
+
+    return result
+
+
+@app.post("/api/chart")
+def save_chart_history(data: dict, db: Session = Depends(database.get_db)):
+    shift = data.get("shift")
+    label = data.get("label")
+    good_qty = int(data.get("good", 0))
+    ng_qty = int(data.get("ng", 0))
+
+    row = db.query(models.ChartHistory).filter(
+        models.ChartHistory.shift == shift,
+        models.ChartHistory.label == label
+    ).first()
+
+    if not row:
+        row = models.ChartHistory(
+            shift=shift,
+            label=label,
+            good_qty=good_qty,
+            ng_qty=ng_qty,
+            updated_at=thai_now()
+        )
+        db.add(row)
+    else:
+        row.good_qty = good_qty
+        row.ng_qty = ng_qty
+        row.updated_at = thai_now()
+
+    db.commit()
+
+    return {"message": "chart saved"}
+
+
+@app.delete("/api/chart")
+def clear_chart_history(db: Session = Depends(database.get_db)):
+    db.query(models.ChartHistory).delete()
+    db.commit()
+    return {"message": "chart cleared"}
+
+
+@app.get("/api/hourly")
+def get_hourly_history(db: Session = Depends(database.get_db)):
+    rows = db.query(models.HourlyHistory).all()
+
+    result = {}
+
+    for r in rows:
+        result[r.slot_key] = {
+            "startGood": r.start_good,
+            "startNG": r.start_ng
+        }
+
+    return result
+
+
+@app.post("/api/hourly")
+def save_hourly_history(data: dict, db: Session = Depends(database.get_db)):
+    shift = data.get("shift")
+    slot_key = data.get("slotKey")
+    start_good = int(data.get("startGood", 0))
+    start_ng = int(data.get("startNG", 0))
+
+    row = db.query(models.HourlyHistory).filter(
+        models.HourlyHistory.shift == shift,
+        models.HourlyHistory.slot_key == slot_key
+    ).first()
+
+    if not row:
+        row = models.HourlyHistory(
+            shift=shift,
+            slot_key=slot_key,
+            start_good=start_good,
+            start_ng=start_ng,
+            updated_at=thai_now()
+        )
+        db.add(row)
+    else:
+        row.start_good = start_good
+        row.start_ng = start_ng
+        row.updated_at = thai_now()
+
+    db.commit()
+
+    return {"message": "hourly saved"}
+
+
+@app.delete("/api/hourly")
+def clear_hourly_history(db: Session = Depends(database.get_db)):
+    db.query(models.HourlyHistory).delete()
+    db.commit()
+    return {"message": "hourly cleared"}
